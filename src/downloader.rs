@@ -19,7 +19,7 @@ pub enum DownType {
     Photostream,
 }
 
-const ROOT: &str = "image-db";
+pub const IMAGE_DB_ROOT: &str = "image-db";
 const REQUEST_THROTTLE: Duration = Duration::from_secs(5);
 
 impl Downloader {
@@ -56,7 +56,11 @@ impl Downloader {
             .replace("/", "_")
             .replace("\\", "_")
             .to_ascii_lowercase();
-        let cache_path = path([ROOT, &downtype.as_ref().to_ascii_lowercase(), &safe_name]);
+        let cache_path = path([
+            IMAGE_DB_ROOT,
+            &downtype.as_ref().to_ascii_lowercase(),
+            &safe_name,
+        ]);
         if cache_path.exists() {
             debug!("cached id {url_id} url {url} at {}", cache_path.display());
             Ok(read_to_string(&cache_path).map_err(SError::io(&cache_path))?)
@@ -81,6 +85,6 @@ impl Downloader {
     }
 }
 
-fn path<const N: usize>(input: [&str; N]) -> PathBuf {
+pub fn path<const N: usize>(input: [&str; N]) -> PathBuf {
     input.into_iter().collect()
 }
