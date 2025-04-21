@@ -4,5 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-reqwest = "0.12.15"
+reqwest = { version = "0.12.15", features = ["blocking"] }
 scraper = "0.23.1"
+strum = { version = "0.27.1", features = ["derive"] }
+thiserror = "2.0.12"
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
