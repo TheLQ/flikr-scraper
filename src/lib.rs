@@ -18,6 +18,7 @@ mod downloader;
 mod err;
 mod flikr_extractor;
 mod flikr_url;
+mod utils;
 
 pub fn start_scraper() -> ExitCode {
     init_logging();
@@ -46,11 +47,11 @@ fn spider_image_paths(downloader: &mut Downloader) -> SResult<()> {
     let scrape_users = [flikr_photostream_pages_as_ids(USER_OLEG_KASHIRIN, 5)];
     for scrape_user in scrape_users {
         for page in scrape_user {
-            let content = downloader.fetch(DownType::Photostream, page)?;
-            info!("loaded content of {}", content.len());
+            let content = todo!(); // downloader.fetch(DownType::Photostream, page)?;
+            // info!("loaded content of {}", content.len());
 
-            extract_photostream_image_ids(content)?;
-            todo!()
+            // extract_photostream_image_ids(content)?;
+            // todo!()
         }
     }
     Ok(())
@@ -67,7 +68,7 @@ fn spider_image_sizes(downloader: &mut Downloader, for_user: &str) -> SResult<()
     for image_path in image_paths {
         let image_id = extract_image_id_from_livestatic(&image_path);
 
-        downloader.fetch(DownType::ImageSizes, format!("{for_user}/{image_id}"))?;
+        downloader.fetch(DownType::ImageSizes, for_user, image_id)?;
     }
 
     Ok(())
