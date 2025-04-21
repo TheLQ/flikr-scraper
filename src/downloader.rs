@@ -1,6 +1,6 @@
 use crate::err::{SError, SResult};
 use std::collections::HashMap;
-use std::fs::{read_dir, read_to_string, write};
+use std::fs::{read, read_dir, read_to_string, write};
 use std::ops::{Add, Sub};
 use std::path::PathBuf;
 use std::thread;
@@ -17,6 +17,7 @@ pub struct Downloader {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, VariantArray, AsRefStr)]
 pub enum DownType {
     Photostream,
+    ImageSizes,
 }
 
 pub const IMAGE_DB_ROOT: &str = "image-db";
@@ -47,9 +48,10 @@ impl Downloader {
         }
     }
 
-    pub fn fetch(&mut self, downtype: DownType, url_id: String) -> SResult<String> {
+    pub fn fetch(&mut self, downtype: DownType, url_id: String) -> SResult<Vec<u8>> {
         let url = match downtype {
             DownType::Photostream => format!("https://www.flickr.com/photos/{url_id}"),
+            DownType::ImageSizes => format!("https://www.flickr.com/photos/{url_id}/sizes/o/"),
         };
 
         let safe_name = url_id
@@ -63,23 +65,23 @@ impl Downloader {
         ]);
         if cache_path.exists() {
             debug!("cached id {url_id} url {url} at {}", cache_path.display());
-            Ok(read_to_string(&cache_path).map_err(SError::io(&cache_path))?)
+            Ok(read(&cache_path).map_err(SError::io(&cache_path))?)
         } else {
             debug!("writing id {url_id} url {url} to {}", cache_path.display());
 
             let throttle_safe: Instant = self.last_request + REQUEST_THROTTLE;
             let throttle_cur = Instant::now();
-            if throttle_cur < throttle_safe {
-                let sleep_dur = throttle_safe - throttle_cur;
+            let sleep_dur = throttle_safe - throttle_cur;
+            if sleep_dur.as_secs() > 0 {
                 debug!("Throttle for {} secs", sleep_dur.as_secs());
                 thread::sleep(sleep_dur);
             }
 
-            let body = self.client.get(url).send()?.text()?;
+            let body = self.client.get(url).send()?.bytes()?;
             write(&cache_path, &body).map_err(SError::io(cache_path))?;
 
-            self.last_request = throttle_cur;
-            Ok(body)
+            self.last_request = Instant::now();
+            Ok(body.to_vec())
             // Ok("".into())
         }
     }
