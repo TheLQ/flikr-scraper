@@ -1,7 +1,5 @@
 use crate::err::{SError, SResult};
-use std::collections::HashMap;
-use std::fs::{read, read_dir, read_to_string, write};
-use std::ops::{Add, Sub};
+use std::fs::{read, write};
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -44,7 +42,7 @@ impl Downloader {
         Self {
             client: reqwest::blocking::Client::new(),
             // arbitrary old date
-            last_request: Instant::now().sub(Duration::from_days(1)),
+            last_request: Instant::now() - Duration::from_days(1),
         }
     }
 

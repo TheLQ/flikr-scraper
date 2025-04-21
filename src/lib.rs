@@ -4,8 +4,8 @@
 use crate::downloader::{DownType, Downloader};
 use crate::err::{SResult, pretty_panic};
 use crate::flikr_extractor::extract_photostream_image_ids;
-use crate::flikr_js_extractor::read_js_extractor;
 use crate::flikr_url::{extract_image_id_from_livestatic, flikr_photostream_pages_as_ids};
+use flikr_extractor::read_js_extractor;
 use std::env;
 use std::process::ExitCode;
 use tracing::info;
@@ -17,7 +17,6 @@ use tracing_subscriber::{EnvFilter, Registry};
 mod downloader;
 mod err;
 mod flikr_extractor;
-mod flikr_js_extractor;
 mod flikr_url;
 
 pub fn start_scraper() -> ExitCode {
@@ -32,7 +31,12 @@ pub fn start_scraper() -> ExitCode {
 
 fn _start_scraper() -> SResult<()> {
     let mut downloader = Downloader::init();
-    spider_image_sizes(&mut downloader, USER_OLEG_KASHIRIN)?;
+    match 2 {
+        1 => spider_image_paths(&mut downloader)?,
+        2 => spider_image_sizes(&mut downloader, USER_OLEG_KASHIRIN)?,
+        _ => unimplemented!(),
+    }
+
     Ok(())
 }
 
