@@ -1,5 +1,6 @@
 use crate::err::{SError, SResult};
 use crate::utils::last_position_of;
+use reqwest::StatusCode;
 use std::fs::{read, write};
 use std::path::PathBuf;
 use std::thread;
@@ -49,20 +50,20 @@ impl Downloader {
     }
 
     pub fn fetch(&mut self, downtype: DownType, for_user: &str, extra: &str) -> SResult<Vec<u8>> {
-        let for_user = for_user.to_ascii_lowercase();
+        let for_user_lower = for_user.to_ascii_lowercase();
         let safe_name: String;
         let url = match downtype {
             DownType::Photostream => {
-                safe_name = format!("{for_user}_page{extra}");
+                safe_name = format!("{for_user_lower}_page{extra}");
                 format!("https://www.flickr.com/photos/{for_user}/page{extra}")
             }
             DownType::ImageSizes => {
-                safe_name = format!("{for_user}_{extra}");
+                safe_name = format!("{for_user_lower}_{extra}");
                 format!("https://www.flickr.com/photos/{for_user}/{extra}/sizes/o/")
             }
             DownType::ImageOrig => {
                 let filename_start = last_position_of(&extra, b'/');
-                safe_name = format!("{for_user}_{}", &extra[(filename_start + 1)..]);
+                safe_name = format!("{for_user_lower}_{}", &extra[(filename_start + 1)..]);
                 extra.to_string()
             }
         };
@@ -86,12 +87,16 @@ impl Downloader {
                 thread::sleep(sleep_dur);
             }
 
-            // let body = self.client.get(url).send()?.bytes()?;
-            // write(&cache_path, &body).map_err(SError::io(cache_path))?;
-            //
-            // self.last_request = Instant::now();
-            // Ok(body.to_vec())
-            Ok("".into())
+            let response = self.client.get(url).send()?;
+            if response.status() != StatusCode::OK {
+                panic!("bad response {}", response.status());
+            }
+            let body = response.bytes()?;
+            write(&cache_path, &body).map_err(SError::io(cache_path))?;
+
+            self.last_request = Instant::now();
+            Ok(body.to_vec())
+            // Ok("".into())
         }
     }
 }

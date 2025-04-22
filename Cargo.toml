@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+regex = "1.11.1"
 reqwest = { version = "0.12.15", features = ["blocking"] }
 scraper = "0.23.1"
 serde = "1.0.219"

@@ -2,13 +2,13 @@
 #![feature(duration_constructors)]
 
 use crate::downloader::{DownType, Downloader};
-use crate::err::{SResult, pretty_panic};
-use crate::flikr_extractor::extract_photostream_image_ids;
-use crate::flikr_url::{extract_image_id_from_livestatic, flikr_photostream_pages_as_ids};
+use crate::err::{SError, SResult, pretty_panic};
+use crate::flikr_extractor::extract_original_size_url;
+use crate::flikr_url::extract_image_id_from_livestatic;
 use flikr_extractor::read_js_extractor;
 use std::env;
 use std::process::ExitCode;
-use tracing::info;
+use tracing::{error, info};
 use tracing_subscriber::fmt::Layer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
@@ -32,10 +32,16 @@ pub fn start_scraper() -> ExitCode {
 
 fn _start_scraper() -> SResult<()> {
     let mut downloader = Downloader::init();
-    match 2 {
-        1 => spider_image_paths(&mut downloader)?,
-        2 => spider_image_sizes(&mut downloader, USER_OLEG_KASHIRIN)?,
-        _ => unimplemented!(),
+
+    for (user, max_pages) in [(USER_OLEG_KASHIRIN, 5)] {
+        let image_paths = match 1 {
+            1 => spider_image_paths(&mut downloader, user, max_pages)?,
+            2 => spider_image_paths_js(user)?,
+            _ => unimplemented!(),
+        };
+        info!("loaded {} images", image_paths.len());
+
+        spider_image_sizes(&mut downloader, user, &image_paths)?;
     }
 
     Ok(())
@@ -43,32 +49,42 @@ fn _start_scraper() -> SResult<()> {
 
 const USER_OLEG_KASHIRIN: &str = "98762402@N06";
 
-fn spider_image_paths(downloader: &mut Downloader) -> SResult<()> {
-    let scrape_users = [flikr_photostream_pages_as_ids(USER_OLEG_KASHIRIN, 5)];
-    for scrape_user in scrape_users {
-        for page in scrape_user {
-            let content = todo!(); // downloader.fetch(DownType::Photostream, page)?;
-            // info!("loaded content of {}", content.len());
+fn spider_image_paths(
+    downloader: &mut Downloader,
+    for_user: &str,
+    max_pages: usize,
+) -> SResult<Vec<String>> {
+    for page in 1..=max_pages {
+        let content = downloader.fetch(DownType::Photostream, for_user, &page.to_string())?;
+        info!("loaded content of {}", content.len());
 
-            // extract_photostream_image_ids(content)?;
-            // todo!()
-        }
+        todo!() // extract_photostream_image_ids(content)?;
     }
-    Ok(())
+    Ok(Vec::new())
 }
 
-fn spider_image_paths_js() -> SResult<Vec<String>> {
-    read_js_extractor(USER_OLEG_KASHIRIN)
+fn spider_image_paths_js(for_user: &str) -> SResult<Vec<String>> {
+    read_js_extractor(for_user)
 }
 
-fn spider_image_sizes(downloader: &mut Downloader, for_user: &str) -> SResult<()> {
-    let image_paths = spider_image_paths_js()?;
-    info!("loaded {} images", image_paths.len());
-
+fn spider_image_sizes(
+    downloader: &mut Downloader,
+    for_user: &str,
+    image_paths: &[String],
+) -> SResult<()> {
     for image_path in image_paths {
         let image_id = extract_image_id_from_livestatic(&image_path);
 
-        downloader.fetch(DownType::ImageSizes, for_user, image_id)?;
+        let image_page = downloader.fetch(DownType::ImageSizes, for_user, image_id)?;
+        let original_image_url = match extract_original_size_url(image_page) {
+            Err(SError::BadPage(page, _)) => {
+                error!("no page found");
+                continue;
+            }
+            r => r,
+        }?;
+
+        downloader.fetch(DownType::ImageOrig, for_user, &original_image_url)?;
     }
 
     Ok(())

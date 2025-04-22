@@ -11,6 +11,9 @@ pub enum SError {
 
     #[error("Io {0} for {1}")]
     Io(std::io::Error, PathBuf, Backtrace),
+
+    #[error("BadPage at {0}")]
+    BadPage(String, Backtrace),
 }
 
 impl SError {
@@ -22,10 +25,15 @@ impl SError {
         move |e| Self::Io(e, path.clone(), sbt())
     }
 
+    pub fn bad_age(page: String) -> Self {
+        Self::BadPage(page, sbt())
+    }
+
     fn my_backtrace(&self) -> &Backtrace {
         match self {
             SError::Reqwest(_, bt) => bt,
             SError::Io(_, _, bt) => bt,
+            SError::BadPage(_, bt) => bt,
         }
     }
 }

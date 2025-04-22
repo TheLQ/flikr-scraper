@@ -20,7 +20,7 @@
         return only_one(res)
     }
 
-    // how many pages are there?
+    // what page are we on?
     function pagination_current() {
         let pagination = pagination_parent();
         let current_elem = only_one(pagination.querySelectorAll("a:has(span[class='is-current'])"));
@@ -31,6 +31,7 @@
         return page
     }
 
+    // start at page 1
     if (pagination_current() !== 1) {
         let sleep = 2000;
         let first_page = only_one(pagination_parent().querySelectorAll("a[data-track='pagination1Click']"))
