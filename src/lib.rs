@@ -1,12 +1,13 @@
 #![feature(error_generic_member_access)]
 #![feature(duration_constructors)]
 
-use crate::downloader::{DownType, Downloader};
+use crate::downloader::{DownType, Downloader, IMAGE_DB_ROOT, path};
 use crate::err::{SError, SResult, pretty_panic};
 use crate::flikr_extractor::extract_original_size_url;
 use crate::flikr_url::extract_image_id_from_livestatic;
 use flikr_extractor::read_js_extractor;
 use std::env;
+use std::fs::read_dir;
 use std::process::ExitCode;
 use tracing::{error, info};
 use tracing_subscriber::fmt::Layer;
@@ -33,10 +34,19 @@ pub fn start_scraper() -> ExitCode {
 fn _start_scraper() -> SResult<()> {
     let mut downloader = Downloader::init();
 
-    const USER_OLEG_KASHIRIN: &str = "98762402@N06";
-    const USER_MARTIJN_BOER: &str = "sic66";
+    // const USER_OLEG_KASHIRIN: &str = "98762402@N06";
+    // const USER_MARTIJN_BOER: &str = "sic66";
+    // const USER_FRITZ: &str = "130561288@N04";
+    // let mut user_ids = detect_js_user_ids();
+    // user_ids.retain(|v| ![USER_OLEG_KASHIRIN, USER_MARTIJN_BOER, USER_FRITZ].contains(&v.as_str()));
+    // user_ids.insert(0, USER_OLEG_KASHIRIN.to_string());
+    // user_ids.insert(0, USER_MARTIJN_BOER.to_string());
+    // user_ids.push(USER_FRITZ.to_string());
+    let user_ids = detect_js_user_ids();
 
-    for (user, max_pages) in [(USER_MARTIJN_BOER, 0), (USER_OLEG_KASHIRIN, 5)] {
+    for user in user_ids {
+        let max_pages = 0;
+        let user = &user;
         let image_paths = match 2 {
             1 => spider_image_paths(&mut downloader, user, max_pages)?,
             2 => spider_image_paths_js(user)?,
@@ -48,6 +58,17 @@ fn _start_scraper() -> SResult<()> {
     }
 
     Ok(())
+}
+
+fn detect_js_user_ids() -> Vec<String> {
+    let mut user_ids = Vec::new();
+    for dir_entry in read_dir(path([IMAGE_DB_ROOT, "photostream-js"])).unwrap() {
+        let dir_entry = dir_entry.unwrap();
+        let path = dir_entry.path();
+        let filename = path.file_name().unwrap().to_str().unwrap();
+        user_ids.push(filename.replace(".json", ""));
+    }
+    user_ids
 }
 
 fn spider_image_paths(

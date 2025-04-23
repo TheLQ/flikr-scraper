@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
 use strum::{AsRefStr, VariantArray};
-use tracing::debug;
+use tracing::{debug, warn};
 
 pub struct Downloader {
     // cache: HashMap<DownType, Vec<PathBuf>>,
@@ -35,6 +35,8 @@ impl Downloader {
                 .proxy(Proxy::all(format!("http://{proxy_addr}")).unwrap())
                 // which uses self-signed CA
                 .danger_accept_invalid_certs(true)
+                // increase timeout. I think the proxy buffers the whole response first
+                .timeout(Duration::from_mins(3))
                 .build()
                 .unwrap(),
             // arbitrary old date
@@ -71,19 +73,29 @@ impl Downloader {
         } else {
             debug!("writing url {url} to {}", cache_path.display());
 
-            let throttle_safe: Instant = self.last_request + REQUEST_THROTTLE;
-            let throttle_cur = Instant::now();
-            let sleep_dur = throttle_safe - throttle_cur;
-            if sleep_dur.as_secs() > 0 {
-                debug!("Throttle for {} secs", sleep_dur.as_secs());
-                thread::sleep(sleep_dur);
-            }
+            let mut body = None;
+            for i in 0..2 {
+                if i != 0 {
+                    warn!("retry {i}");
+                }
+                let throttle_safe: Instant = self.last_request + REQUEST_THROTTLE;
+                let throttle_cur = Instant::now();
+                let sleep_dur = throttle_safe - throttle_cur;
+                if sleep_dur.as_secs() > 0 {
+                    debug!("Throttle for {} secs", sleep_dur.as_secs());
+                    thread::sleep(sleep_dur);
+                }
 
-            let response = self.client.get(url).send()?;
-            if response.status() != StatusCode::OK {
-                panic!("bad response {}", response.status());
+                let response = self.client.get(&url).send()?;
+                if response.status() != StatusCode::OK {
+                    panic!("bad response {}", response.status());
+                }
+                body = Some(response.bytes()?);
+                break;
             }
-            let body = response.bytes()?;
+            let Some(body) = body else {
+                panic!("failed to download {url}")
+            };
             write(&cache_path, &body).map_err(SError::io(cache_path))?;
 
             self.last_request = Instant::now();
