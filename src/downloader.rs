@@ -26,22 +26,6 @@ const REQUEST_THROTTLE: Duration = Duration::from_secs(5);
 
 impl Downloader {
     pub fn init() -> Self {
-        // let mut cache = HashMap::new();
-        //
-        // for downtype in DownType::VARIANTS {
-        //     let dir_name = downtype.as_ref().to_lowercase();
-        //
-        //     let mut paths = Vec::new();
-        //     for dir_entry in read_dir(path([ROOT, &dir_name])).unwrap() {
-        //         let dir_entry = dir_entry.unwrap();
-        //         paths.push(dir_entry.path());
-        //     }
-        //
-        //     cache.insert(*downtype, paths);
-        // }
-        //
-        // Self { cache }
-
         Self {
             client: reqwest::blocking::Client::new(),
             // arbitrary old date
@@ -62,7 +46,7 @@ impl Downloader {
                 format!("https://www.flickr.com/photos/{for_user}/{extra}/sizes/o/")
             }
             DownType::ImageOrig => {
-                let filename_start = last_position_of(&extra, b'/');
+                let filename_start = last_position_of(extra, b'/');
                 safe_name = format!("{for_user_lower}_{}", &extra[(filename_start + 1)..]);
                 extra.to_string()
             }

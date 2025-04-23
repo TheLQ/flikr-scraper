@@ -73,11 +73,11 @@ fn spider_image_sizes(
     image_paths: &[String],
 ) -> SResult<()> {
     for image_path in image_paths {
-        let image_id = extract_image_id_from_livestatic(&image_path);
+        let image_id = extract_image_id_from_livestatic(image_path);
 
         let image_page = downloader.fetch(DownType::ImageSizes, for_user, image_id)?;
         let original_image_url = match extract_original_size_url(image_page) {
-            Err(SError::BadPage(page, _)) => {
+            Err(SError::BadPage(_page, _)) => {
                 error!("no page found");
                 continue;
             }
