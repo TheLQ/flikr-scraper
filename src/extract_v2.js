@@ -83,6 +83,8 @@
 
         let next_page = [...pagination_parent().querySelectorAll("a[data-track='paginationRightClick']")]
         if (next_page.length === 1) {
+            console.log("current extractions", imgs)
+
             next_page[0].click()
             let sleep = 5000;
             console.log(`advance to next page, sleep ${sleep}`)

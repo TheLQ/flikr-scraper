@@ -11,4 +11,4 @@ Comments and other data are out of scope
 2. For each user, open their photostream page in the browser
 3. Run `src/extract_v2.js` in developer console
 4. On "== EXTRACTED IMAGES ==" message, right click > Copy Object, paste into `image-db/photostream-js/$user_id.json`
-5. Run scraper
+5. Run scraper. Be patient, downloading is throttled to be a nice scraper
