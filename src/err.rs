@@ -6,7 +6,7 @@ pub type SResult<R> = Result<R, SError>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SError {
-    #[error("Reqwest {0}")]
+    #[error("Reqwest {0:?}")]
     Reqwest(#[from] reqwest::Error, Backtrace),
 
     #[error("Io {0} for {1}")]

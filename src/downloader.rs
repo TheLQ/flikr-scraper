@@ -1,6 +1,6 @@
 use crate::err::{SError, SResult};
 use crate::utils::last_position_of;
-use reqwest::StatusCode;
+use reqwest::{Proxy, StatusCode};
 use std::fs::{read, write};
 use std::path::PathBuf;
 use std::thread;
@@ -26,8 +26,17 @@ const REQUEST_THROTTLE: Duration = Duration::from_secs(5);
 
 impl Downloader {
     pub fn init() -> Self {
+        let proxy_addr = std::env::var("WARC_PROXY")
+            .expect("Please be nice, export WARC_PROXY=127.0.0.1:8000 pointing to warcprox");
+
         Self {
-            client: reqwest::blocking::Client::new(),
+            client: reqwest::blocking::Client::builder()
+                // proxy to MITM warcprox
+                .proxy(Proxy::all(format!("http://{proxy_addr}")).unwrap())
+                // which uses self-signed CA
+                .danger_accept_invalid_certs(true)
+                .build()
+                .unwrap(),
             // arbitrary old date
             last_request: Instant::now() - Duration::from_days(1),
         }

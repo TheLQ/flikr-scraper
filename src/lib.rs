@@ -98,6 +98,7 @@ fn init_logging() {
     hyper_util::client::legacy::pool=DEBUG,\
     selectors::matching=INFO,\
     html5ever=INFO";
+    // let default_env = "trace";
 
     let subscriber = Registry::default();
 
