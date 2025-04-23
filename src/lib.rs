@@ -34,7 +34,7 @@ fn _start_scraper() -> SResult<()> {
     let mut downloader = Downloader::init();
 
     for (user, max_pages) in [(USER_OLEG_KASHIRIN, 5)] {
-        let image_paths = match 1 {
+        let image_paths = match 2 {
             1 => spider_image_paths(&mut downloader, user, max_pages)?,
             2 => spider_image_paths_js(user)?,
             _ => unimplemented!(),
