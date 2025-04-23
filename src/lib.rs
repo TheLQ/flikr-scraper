@@ -33,7 +33,10 @@ pub fn start_scraper() -> ExitCode {
 fn _start_scraper() -> SResult<()> {
     let mut downloader = Downloader::init();
 
-    for (user, max_pages) in [(USER_OLEG_KASHIRIN, 5)] {
+    const USER_OLEG_KASHIRIN: &str = "98762402@N06";
+    const USER_MARTIJN_BOER: &str = "sic66";
+
+    for (user, max_pages) in [(USER_MARTIJN_BOER, 0), (USER_OLEG_KASHIRIN, 5)] {
         let image_paths = match 2 {
             1 => spider_image_paths(&mut downloader, user, max_pages)?,
             2 => spider_image_paths_js(user)?,
@@ -46,8 +49,6 @@ fn _start_scraper() -> SResult<()> {
 
     Ok(())
 }
-
-const USER_OLEG_KASHIRIN: &str = "98762402@N06";
 
 fn spider_image_paths(
     downloader: &mut Downloader,

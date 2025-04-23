@@ -44,7 +44,7 @@
 
     let imgs = [];
     while (true) {
-        let sleep = 2000;
+        let sleep = 5000;
         let current_page = pagination_current();
         console.log(`++SCRAPE - page ${current_page} scroll to bottom, sleep ${sleep}`)
         window.scrollBy(0, 99999);
@@ -61,7 +61,7 @@
         let next_page = [...pagination_parent().querySelectorAll("a[data-track='paginationRightClick']")]
         if (next_page.length === 1) {
             next_page[0].click()
-            let sleep = 3000;
+            let sleep = 5000;
             console.log(`advance to next page, sleep ${sleep}`)
             await timeout(sleep)
         } else {
