@@ -31,6 +31,31 @@
         return page
     }
 
+    function extract_images() {
+        let imgs = []
+        document.querySelectorAll(".photo-list-photo-container > img").forEach((e) => {
+            console.log("img " + e.src);
+            imgs.push(e.src)
+        });
+        return imgs
+    }
+
+    let is_single_page = (() => {
+        let pagination_elem = [...document.getElementsByClassName("pagination-view")][0];
+        return pagination_elem.children.length === 0;
+    })()
+    if (is_single_page) {
+        console.log("single page extract")
+        let imgs = extract_images();
+        if (imgs.length === 0) {
+            throw new Error("wrong page? no images found")
+        }
+        console.log("== EXTRACTED SINGLE IMAGES ==", imgs);
+        return
+    } else {
+        console.log("appears to be multi-page photostream")
+    }
+
     // start at page 1
     if (pagination_current() !== 1) {
         let sleep = 2000;
@@ -50,13 +75,11 @@
         window.scrollBy(0, 99999);
         await timeout(sleep);
 
-        let counter = 0;
-        document.querySelectorAll(".photo-list-photo-container > img").forEach((e) => {
-            console.log("img " + e.src);
-            imgs.push(e.src)
-            counter += 1;
-        });
-        console.log(`found ${counter} images, total ${imgs.length}`)
+        let new_imgs = extract_images();
+        for (let new_img of new_imgs) {
+            imgs.push(new_img)
+        }
+        console.log(`found ${new_imgs.length} images, total ${imgs.length}`)
 
         let next_page = [...pagination_parent().querySelectorAll("a[data-track='paginationRightClick']")]
         if (next_page.length === 1) {
