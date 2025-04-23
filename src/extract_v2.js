@@ -86,7 +86,7 @@
             console.log("current extractions", imgs)
 
             next_page[0].click()
-            let sleep = 5000;
+            let sleep = 5000; // Please be a nice scraper
             console.log(`advance to next page, sleep ${sleep}`)
             await timeout(sleep)
         } else {

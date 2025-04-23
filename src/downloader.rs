@@ -22,7 +22,7 @@ pub enum DownType {
 }
 
 pub const IMAGE_DB_ROOT: &str = "image-db";
-const REQUEST_THROTTLE: Duration = Duration::from_secs(5);
+const REQUEST_THROTTLE: Duration = Duration::from_secs(5); // Please be a nice scraper
 
 impl Downloader {
     pub fn init() -> Self {
