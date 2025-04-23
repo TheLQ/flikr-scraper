@@ -1,12 +1,12 @@
 use crate::err::{SError, SResult};
 use crate::utils::last_position_of;
 use reqwest::{Proxy, StatusCode};
-use std::fs::{read, write};
+use std::fs::{create_dir, read, write};
 use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
 use strum::{AsRefStr, VariantArray};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 pub struct Downloader {
     // cache: HashMap<DownType, Vec<PathBuf>>,
@@ -62,11 +62,7 @@ impl Downloader {
             }
         };
 
-        let cache_path = path([
-            IMAGE_DB_ROOT,
-            &downtype.as_ref().to_ascii_lowercase(),
-            &safe_name,
-        ]);
+        let cache_path = path([IMAGE_DB_ROOT, &downtype.safe_name(), &safe_name]);
         if cache_path.exists() {
             debug!("cached url {url} at {}", cache_path.display());
             Ok(read(&cache_path).map_err(SError::io(&cache_path))?)
@@ -102,6 +98,27 @@ impl Downloader {
             Ok(body.to_vec())
             // Ok("".into())
         }
+    }
+}
+
+impl DownType {
+    pub fn mkdirs() {
+        let mut output_dirs: Vec<PathBuf> = Self::VARIANTS
+            .iter()
+            .map(|downtype| path([IMAGE_DB_ROOT, &downtype.safe_name()]))
+            .collect();
+        output_dirs.insert(0, path([IMAGE_DB_ROOT]));
+
+        for dir in output_dirs {
+            if !dir.exists() {
+                info!("Creating directory {}", dir.display());
+                create_dir(&dir).unwrap();
+            }
+        }
+    }
+
+    fn safe_name(&self) -> String {
+        self.as_ref().to_ascii_lowercase()
     }
 }
 

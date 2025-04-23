@@ -32,6 +32,7 @@ pub fn start_scraper() -> ExitCode {
 }
 
 fn _start_scraper() -> SResult<()> {
+    DownType::mkdirs();
     let mut downloader = Downloader::init();
 
     // const USER_OLEG_KASHIRIN: &str = "98762402@N06";
@@ -54,6 +55,7 @@ fn _start_scraper() -> SResult<()> {
         };
         info!("loaded {} images", image_paths.len());
 
+        // TODO: skip reparsing when imageorig already contains the image
         spider_image_sizes(&mut downloader, user, &image_paths)?;
     }
 
