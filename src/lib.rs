@@ -109,6 +109,8 @@ fn spider_image_sizes(
         }?;
 
         downloader.fetch(DownType::ImageOrig, for_user, &original_image_url)?;
+
+        downloader.fetch(DownType::ImageViewer, for_user, image_id)?;
     }
 
     Ok(())

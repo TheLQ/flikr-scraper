@@ -17,6 +17,7 @@ pub struct Downloader {
 #[derive(Clone, PartialEq, Eq, Hash, VariantArray, AsRefStr)]
 pub enum DownType {
     Photostream,
+    ImageViewer,
     ImageSizes,
     ImageOrig,
 }
@@ -50,6 +51,10 @@ impl Downloader {
             DownType::Photostream => {
                 safe_name = format!("{for_user}_page{extra}");
                 format!("https://www.flickr.com/photos/{for_user}/page{extra}")
+            }
+            DownType::ImageViewer => {
+                safe_name = format!("{for_user}_{extra}");
+                format!("https://www.flickr.com/photos/{for_user}/{extra}/")
             }
             DownType::ImageSizes => {
                 safe_name = format!("{for_user}_{extra}");
