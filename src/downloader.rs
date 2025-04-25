@@ -2,7 +2,7 @@ use crate::err::{SError, SResult};
 use crate::utils::last_position_of;
 use reqwest::{Proxy, StatusCode};
 use std::fs::{create_dir, read, write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, Instant};
 use strum::{AsRefStr, VariantArray};
@@ -20,6 +20,11 @@ pub enum DownType {
     ImageViewer,
     ImageSizes,
     ImageOrig,
+}
+
+pub struct FetchResponse {
+    pub body: Vec<u8>,
+    pub output_path: PathBuf,
 }
 
 pub const IMAGE_DB_ROOT: &str = "image-db";
@@ -45,7 +50,12 @@ impl Downloader {
         }
     }
 
-    pub fn fetch(&mut self, downtype: DownType, for_user: &str, extra: &str) -> SResult<Vec<u8>> {
+    pub fn fetch(
+        &mut self,
+        downtype: DownType,
+        for_user: &str,
+        extra: &str,
+    ) -> SResult<FetchResponse> {
         let safe_name: String;
         let url = match downtype {
             DownType::Photostream => {
@@ -70,7 +80,10 @@ impl Downloader {
         let cache_path = path([IMAGE_DB_ROOT, &downtype.safe_name(), &safe_name]);
         if cache_path.exists() {
             debug!("cached url {url} at {}", cache_path.display());
-            Ok(read(&cache_path).map_err(SError::io(&cache_path))?)
+            Ok(FetchResponse {
+                body: read(&cache_path).map_err(SError::io(&cache_path))?,
+                output_path: cache_path.into(),
+            })
         } else {
             debug!("writing url {url} to {}", cache_path.display());
 
@@ -97,11 +110,13 @@ impl Downloader {
             let Some(body) = body else {
                 panic!("failed to download {url}")
             };
-            write(&cache_path, &body).map_err(SError::io(cache_path))?;
+            write(&cache_path, &body).map_err(SError::io(&cache_path))?;
 
             self.last_request = Instant::now();
-            Ok(body.to_vec())
-            // Ok("".into())
+            Ok(FetchResponse {
+                body: body.to_vec(),
+                output_path: cache_path.into(),
+            })
         }
     }
 }
