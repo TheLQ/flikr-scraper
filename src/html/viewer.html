@@ -3,6 +3,9 @@
 <head>
     <title>Simple Flikr Scraper Viewer</title>
     <script type="text/javascript" src="viewer.js"></script>
+    <!-- workaround without CORS for file:/// paths -->
+    <script defer type="text/javascript" src="scrape-viewer.js"></script>
+    <link href="viewer.css" rel="stylesheet"/>
 </head>
 <body>
 
@@ -16,6 +19,12 @@
         </select>
     </label>
 </form>
+
+<div id="photo-wrapper">
+    <div id="photo-single-tpl">
+        <img id="photo-img-tpl" loading="lazy"/>
+    </div>
+</div>
 
 
 </body>

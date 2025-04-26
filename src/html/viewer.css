@@ -1,0 +1,8 @@
+#photo-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#photo-wrapper img {
+    max-width: 200px;
+}
