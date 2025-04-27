@@ -1,7 +1,9 @@
 use crate::downloader::{IMAGE_DB_ROOT, path};
 use crate::err::{SError, SResult};
+use crate::viewer_gen::BookPhoto;
 use scraper::{ElementRef, Html, Selector};
 use std::fs::read;
+use tracing::error;
 
 /// JSON output of JS extractor
 /// Direct HTML extraction isn't possible
@@ -33,4 +35,30 @@ pub fn extract_original_size_url(content: Vec<u8>) -> SResult<String> {
     let found = founds.remove(founds.len() - 1);
 
     Ok(found.attr("href").unwrap().to_string())
+}
+
+pub fn extract_image_meta(content: Vec<u8>, book_photo: &mut BookPhoto) -> SResult<()> {
+    let document = Html::parse_document(str::from_utf8(&content).unwrap());
+
+    book_photo.title = {
+        let selector = Selector::parse(".scrollable-container .photo-title").unwrap();
+        let mut founds: Vec<ElementRef> = document.select(&selector).collect();
+        if founds.len() == 1 {
+            founds.remove(0).inner_html().trim().into()
+        } else {
+            "no-title".into()
+        }
+    };
+
+    book_photo.description = {
+        let selector = Selector::parse(".photo-desc").unwrap();
+        let mut founds: Vec<ElementRef> = document.select(&selector).collect();
+        if founds.len() == 1 {
+            founds.remove(0).inner_html().trim().into()
+        } else {
+            "no-desc".into()
+        }
+    };
+
+    Ok(())
 }

@@ -10,10 +10,11 @@ pub struct BookRoot {
     photos: HashMap<String, Vec<BookPhoto>>,
 }
 
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 pub struct BookPhoto {
-    url: String,
-    description: String,
+    pub url: String,
+    pub description: String,
+    pub title: String,
 }
 
 impl BookRoot {
@@ -23,13 +24,10 @@ impl BookRoot {
         }
     }
 
-    pub fn push_image(&mut self, for_user: &str, url: &str, description: String) {
+    pub fn push_image(&mut self, for_user: &str, book_photo: BookPhoto) {
         let for_user = for_user.to_string();
         let user_photos = self.photos.entry(for_user).or_default();
-        user_photos.push(BookPhoto {
-            url: url.to_string(),
-            description,
-        })
+        user_photos.push(book_photo)
     }
 
     pub fn write(&self) -> SResult<()> {

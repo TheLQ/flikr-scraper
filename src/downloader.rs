@@ -2,7 +2,7 @@ use crate::err::{SError, SResult};
 use crate::utils::last_position_of;
 use reqwest::{Proxy, StatusCode};
 use std::fs::{create_dir, read, write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::thread;
 use std::time::{Duration, Instant};
 use strum::{AsRefStr, VariantArray};

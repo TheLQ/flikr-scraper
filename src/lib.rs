@@ -3,11 +3,10 @@
 
 use crate::downloader::{DownType, Downloader, IMAGE_DB_ROOT, path};
 use crate::err::{SError, SResult, pretty_panic};
-use crate::flikr_extractor::extract_original_size_url;
+use crate::flikr_extractor::{extract_image_meta, extract_original_size_url};
 use crate::flikr_url::extract_image_id_from_livestatic;
-use crate::viewer_gen::BookRoot;
+use crate::viewer_gen::{BookPhoto, BookRoot};
 use flikr_extractor::read_js_extractor;
-use serde::de::IntoDeserializer;
 use std::env;
 use std::fs::read_dir;
 use std::process::ExitCode;
@@ -121,19 +120,20 @@ fn spider_image_sizes(
         }?;
         let image_orig = downloader.fetch(DownType::ImageOrig, for_user, &original_image_url)?;
 
-        // downloader.fetch(DownType::ImageViewer, for_user, image_id)?;
+        let image_viewer = downloader.fetch(DownType::ImageViewer, for_user, image_id)?;
 
-        book.push_image(
-            for_user,
-            image_orig
-                .output_path
-                .strip_prefix(IMAGE_DB_ROOT)
-                .unwrap()
-                .as_os_str()
-                .to_str()
-                .unwrap(),
-            "some description".into(),
-        );
+        let mut book_photo = BookPhoto::default();
+        book_photo.url = image_orig
+            .output_path
+            .strip_prefix(IMAGE_DB_ROOT)
+            .unwrap()
+            .as_os_str()
+            .to_str()
+            .unwrap()
+            .to_string();
+        extract_image_meta(image_viewer.body, &mut book_photo)?;
+
+        book.push_image(for_user, book_photo);
     }
 
     Ok(())
